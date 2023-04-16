@@ -23,9 +23,10 @@ Git (download here)
 Installing
 Clone the repository:
 
-sh
-Copy code
+
+```shell
 git clone https://github.com/Nour833/SmartAirBoard.git
+```
 Open the Arduino IDE and navigate to File > Open. Select the SmartAirboard.ino file from the cloned repository.
 
 Connect the hoverboard to your computer using a USB cable.
