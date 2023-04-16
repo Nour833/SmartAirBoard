@@ -1,6 +1,7 @@
 import cv2
 import mediapipe as mp
 import numpy as np
+import pytesseract
 
 mp_drawing = mp.solutions.drawing_utils
 mp_hands = mp.solutions.hands
@@ -25,6 +26,23 @@ def get_hand_landmarks(landmarks_list, hand_to_use):
             if label_hand.classification[0].label == "Left":
                 return hand_landmark
     return None
+
+
+def recognize_text(img, text_color):
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    _, thresh = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
+    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
+    dilate = cv2.dilate(thresh, kernel, iterations=1)
+    contours, _ = cv2.findContours(dilate, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    for cnt in contours:
+        area = cv2.contourArea(cnt)
+        if area > 100:
+            x, y, w, h = cv2.boundingRect(cnt)
+            roi = img[y:y + h, x:x + w]
+            text = pytesseract.image_to_string(roi, lang='eng', config='--psm 7')
+            if text:
+                cv2.putText(img, text, (x, y), cv2.FONT_HERSHEY_SIMPLEX, 1, text_color, 2)
+    return img
 
 
 hand_to_use = input("Enter 'R' for right hand or 'L' for left hand: ")
@@ -98,22 +116,28 @@ with mp_hands.Hands(max_num_hands=2, min_detection_confidence=0.5, min_tracking_
                         prev_index_tip_x, prev_index_tip_y = index_tip_x, index_tip_y
                         cv2.line(canvas, (prev_index_tip_x, prev_index_tip_y), (index_tip_x, index_tip_y), pen_color,
                                  thickness=5)
-    
+
                 prev_index_tip_x, prev_index_tip_y = index_tip_x, index_tip_y
-        alpha = 0.5
-        overlay = canvas.copy()
-        output = frame.copy()
-        cv2.addWeighted(overlay, alpha, output, 1 - alpha, 0, output)
-        # Show the video feed and drawing canvas
-        cv2.imshow('Drawing Canvas', canvas)
-        cv2.imshow('Video Feed', output)
 
-        key = cv2.waitKey(5)
+            alpha = 0.5
+            overlay = canvas.copy()
+            output = frame.copy()
+            cv2.addWeighted(overlay, alpha, output, 1 - alpha, 0, output)
+            cv2.imshow('Frame', output)
 
-        if key & 0xFF == ord('q'):
-            break
-        elif key & 0xFF == ord("c"):
-            canvas.fill(255)
+            key = cv2.waitKey(5)
 
+            if key & 0xFF == ord('q'):
+                break
+            elif key & 0xFF == ord("c"):
+                canvas.fill(255)
+            elif key & 0xFF == ord('d'):
+                # Draw canvas on frame
+                frame = cv2.add(frame, canvas)
+
+                # Recognize text from frame
+                frame = recognize_text(frame, color_red)
+
+                cv2.imshow('Frame_new', frame)
 cap.release()
 cv2.destroyAllWindows()
