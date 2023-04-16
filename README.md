@@ -2,7 +2,8 @@ SmartAirboard
 <p align="center">
   <img src="https://example.com/smartairboard.png" alt="SmartAirboard Logo">
 </p>
-License: MIT
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 
 SmartAirboard is an open-source project for a smart electric hoverboard. It is designed to be easy to build and modify, and includes features such as Bluetooth connectivity and a mobile app for controlling the board.
 
@@ -24,7 +25,7 @@ Clone the repository:
 
 sh
 Copy code
-git clone https://github.com/example/smartairboard.git
+git clone https://github.com/Nour833/SmartAirBoard.git
 Open the Arduino IDE and navigate to File > Open. Select the SmartAirboard.ino file from the cloned repository.
 
 Connect the hoverboard to your computer using a USB cable.
