@@ -1,9 +1,9 @@
 SmartAirboard
 <p align="center">
-  <img src="https://example.com/smartairboard.png" alt="SmartAirboard Logo">
+  <img src="https://raw.githubusercontent.com/Nour833/SmartAirBoard/master/smarairboard.png?token=GHSAT0AAAAAACAH6JYLJXLMMZOIFSKTZBMCZB34HUA" alt="SmartAirboard Logo">
 </p>
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 SmartAirboard is an open-source project for a smart electric hoverboard. It is designed to be easy to build and modify, and includes features such as Bluetooth connectivity and a mobile app for controlling the board.
 
