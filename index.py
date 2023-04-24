@@ -1,6 +1,7 @@
 import cv2
 import mediapipe as mp
 import numpy as np
+import pytesseract
 
 mp_drawing = mp.solutions.drawing_utils
 mp_hands = mp.solutions.hands
@@ -115,6 +116,31 @@ def draw_border(img, pt1=(375, 125), pt2=(625, 375), color=(0, 255, 0), thicknes
     cv2.ellipse(img, (x2 - r, y2 - r), (r, r), 0, 0, 90, color, thickness)
 
 
+def detect_character(frame, x1, y1, x2, y2):
+    # Extract region of interest from frame
+    roi = frame[y1:y2, x1:x2, :]
+
+    # Convert ROI to grayscale
+    gray = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
+
+    # Apply threshold to binarize grayscale image
+    ret, thresh = cv2.threshold(gray, 127, 255, cv2.THRESH_BINARY)
+    # Run Tesseract OCR on the binarized image to recognize characters
+    config = "--psm 10"  # Assume single character in image
+    text = pytesseract.image_to_string(thresh, config=config)
+    # Determine color based on recognized character
+    if text.upper() == 'B':
+        color = 'B'
+    elif text.upper() == 'R':
+        color = 'R'
+    elif text.upper() == 'G':
+        color = 'G'
+    else:
+        color = '?'
+
+    return color
+
+
 def changing_color():
     global hand_landmarks, hand_to_use, frame, canvas, handLabel, LEVEL
     cv2.putText(frame, 'type R,G or B', (70, 50), cv2.FONT_HERSHEY_SIMPLEX, 2,
@@ -129,6 +155,10 @@ def changing_color():
         cv2.putText(frame, 'Checking', (380, 420), cv2.FONT_HERSHEY_SIMPLEX, 1,
                     (0, 255, 255), 5)
         frame, canvas = draw_line(hand_landmarks, frame, canvas)
+        color = detect_character(frame, 375, 125, 625, 375)
+        if color is not None:
+            print("Color detected:", color)
+        return color
 
 
 def confirming_hand():
