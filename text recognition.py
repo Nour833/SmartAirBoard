@@ -135,7 +135,6 @@ with mp_hands.Hands(max_num_hands=2, min_detection_confidence=0.5, min_tracking_
                 # Draw canvas on frame
                 frame = cv2.add(frame, canvas)
 
-                # Recognize text from frame
                 frame = recognize_text(frame, color_red)
 
                 cv2.imshow('Frame_new', frame)
