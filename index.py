@@ -1,3 +1,5 @@
+import time
+
 import cv2
 import mediapipe as mp
 import numpy as np
@@ -12,8 +14,6 @@ hand_not_to_use = None
 # Initialize drawing canvas
 canvas = np.zeros((480, 640, 3), dtype=np.uint8)
 canvas.fill(255)
-canvas_bak = np.zeros((480, 640, 3), dtype=np.uint8)
-canvas_bak.fill(255)
 
 color_red = (0, 0, 255)
 color_blue = (255, 0, 0)
@@ -47,7 +47,7 @@ def draw_line(hand_landmarks, frame, canvas):
 
     # Implement drawing and color selection logic
     if pinky.y < ring.y < middle.y < index_tip.y < thumb.y:
-        if (abs(pinky.x - index_tip.x) * 1000) > 150:
+        if (abs(pinky.x - index_tip.x) * 1000) > 130:
             # Get the color of the pixel at the position of the pinky finger
             # get color of pixel on the left of pinky finger
             b, g, r = frame[pinky_y, pinky_x - 30]
@@ -67,7 +67,7 @@ def draw_line(hand_landmarks, frame, canvas):
                 cv2.line(canvas, (prev_index_tip_x, prev_index_tip_y), (index_tip_x, index_tip_y),
                          (255, 255, 255),
                          thickness=40)
-    elif index_tip.y < middle.y and (abs(middle.y - index_tip.y) * 1000) > 150 and (
+    elif index_tip.y < middle.y and (abs(middle.y - index_tip.y) * 1000) > 130 and (
             abs(middle.x - index_tip.x) * 1000) > 20 and index_dip_y > index_tip_y:
         try:
             cv2.line(canvas, (prev_index_tip_x, prev_index_tip_y), (index_tip_x, index_tip_y),
@@ -173,7 +173,7 @@ with mp_hands.Hands(max_num_hands=2, min_detection_confidence=0.5, min_tracking_
         cv2.imshow('Drawing Canvas', canvas)
         cv2.imshow('Video Feed', output)
 
-        key = cv2.waitKey(5)
+        key = cv2.waitKey(1)
 
         if key & 0xFF == ord('q'):
             break
