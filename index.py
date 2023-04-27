@@ -1,13 +1,13 @@
 import cv2
 import mediapipe as mp
 import numpy as np
-import pytesseract
 
 mp_drawing = mp.solutions.drawing_utils
 mp_hands = mp.solutions.hands
 confirming = 0
 LEVEL = 1
 hand_to_use = None
+hand_not_to_use = None
 
 # Initialize drawing canvas
 canvas = np.zeros((480, 640, 3), dtype=np.uint8)
@@ -116,53 +116,8 @@ def draw_border(img, pt1=(375, 125), pt2=(625, 375), color=(0, 255, 0), thicknes
     cv2.ellipse(img, (x2 - r, y2 - r), (r, r), 0, 0, 90, color, thickness)
 
 
-def detect_character(frame, x1, y1, x2, y2):
-    # Extract region of interest from frame
-    roi = frame[y1:y2, x1:x2, :]
-
-    # Convert ROI to grayscale
-    gray = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
-
-    # Apply threshold to binarize grayscale image
-    ret, thresh = cv2.threshold(gray, 127, 255, cv2.THRESH_BINARY)
-    # Run Tesseract OCR on the binarized image to recognize characters
-    config = "--psm 10"  # Assume single character in image
-    text = pytesseract.image_to_string(thresh, config=config)
-    # Determine color based on recognized character
-    if text.upper() == 'B':
-        color = 'B'
-    elif text.upper() == 'R':
-        color = 'R'
-    elif text.upper() == 'G':
-        color = 'G'
-    else:
-        color = '?'
-
-    return color
-
-
-def changing_color():
-    global hand_landmarks, hand_to_use, frame, canvas, handLabel, LEVEL
-    cv2.putText(frame, 'type R,G or B', (70, 50), cv2.FONT_HERSHEY_SIMPLEX, 2,
-                (255, 0, 0), 10)
-    draw_border(frame)
-    h = 0
-    for i in hand_landmarks.landmark:
-        if 375 <= i.x * 640 <= 625 and 125 <= i.y * 480 <= 375:
-            h += 1
-
-    if h == 21:
-        cv2.putText(frame, 'Checking', (380, 420), cv2.FONT_HERSHEY_SIMPLEX, 1,
-                    (0, 255, 255), 5)
-        frame, canvas = draw_line(hand_landmarks, frame, canvas)
-        color = detect_character(frame, 375, 125, 625, 375)
-        if color is not None:
-            print("Color detected:", color)
-        return color
-
-
 def confirming_hand():
-    global hand_to_use, frame, confirming, handLabel, LEVEL
+    global hand_to_use, hand_not_to_use, frame, confirming, handLabel, LEVEL
     cv2.putText(frame, 'Put Your Hand', (70, 50), cv2.FONT_HERSHEY_SIMPLEX, 2,
                 (255, 0, 0), 10)
     draw_border(frame)
@@ -173,6 +128,10 @@ def confirming_hand():
     if h == 21:
         confirming += 4
         hand_to_use = handLabel
+        if hand_to_use == 'Right':
+            hand_not_to_use = 'Left'
+        else:
+            hand_not_to_use = 'Right'
         cv2.putText(frame, 'Confirming {}%'.format(int(confirming)), (380, 420), cv2.FONT_HERSHEY_SIMPLEX, 1,
                     (0, 255, 255), 5)
         if confirming == 100:
@@ -195,17 +154,15 @@ with mp_hands.Hands(max_num_hands=2, min_detection_confidence=0.5, min_tracking_
         frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         result = hands.process(frame_rgb)
         if result.multi_hand_landmarks:
-            if (LEVEL == 1 and not (confirming != 0 and handLabel != hand_to_use)):
+            if LEVEL == 1 and not (confirming != 0 and handLabel != hand_to_use):
                 for hand_landmarks in result.multi_hand_landmarks:
                     handIndex = result.multi_hand_landmarks.index(hand_landmarks)
                     handLabel = result.multi_handedness[handIndex].classification[0].label
                     confirming_hand()
-            elif LEVEL == 2:
-                hand_landmarks = get_hand_landmarks(result, hand_to_use)
-                draw_border(frame)
-                changing_color()
+
             else:
                 hand_landmarks = get_hand_landmarks(result, hand_to_use)
+                hand_landmarks_n = get_hand_landmarks(result, hand_not_to_use)
                 if hand_landmarks:
                     frame, canvas = draw_line(hand_landmarks, frame, canvas)
         alpha = 0.5
@@ -223,15 +180,6 @@ with mp_hands.Hands(max_num_hands=2, min_detection_confidence=0.5, min_tracking_
         elif key & 0xFF == ord("c"):
             LEVEL = 1
             confirming = 0
-        elif key & 0xFF == ord("<"):
-            if LEVEL != 2:
-                LEVEL = 2
-                canvas_bak = canvas.copy()
-                canvas.fill(255)
-            else:
-                canvas.fill(255)
-                canvas = canvas_bak.copy()
-                LEVEL = 5
         elif key & 0xFF == ord("r"):
             canvas.fill(255)
 
